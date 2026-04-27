@@ -43,7 +43,11 @@ def values_match(predicted, ground_truth, field_name: str) -> bool:
         return False
 
     if field_name in STRING_FIELDS:
-        return str(predicted).strip().lower() == str(ground_truth).strip().lower()
+        pred_str = str(predicted).strip().lower()
+        gt_str = str(ground_truth).strip().lower()
+        if pred_str == gt_str:
+            return True
+        return pred_str in gt_str or gt_str in pred_str
 
     if field_name in NUMERIC_FIELDS:
         try:

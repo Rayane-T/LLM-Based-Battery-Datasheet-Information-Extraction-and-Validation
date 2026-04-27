@@ -23,25 +23,93 @@ inst:Li_ion a batt:Chemistry ;
 inst:NMC a batt:Chemistry ;
     batt:chemistryType "NMC" .
 
+inst:battery_16340 a batt:Battery ;
+    rdfs:label "Battery: 16340" ;
+    batt:batteryModel "16340" ;
+    batt:hasChemistry inst:Li-ion ;
+    batt:hasManufacturer inst:manufacturer_DNK_Power_o_Ltd ;
+    batt:hasSpecification inst:spec_16340_Charge_Voltage,
+        inst:spec_16340_Discharge_Cutoff_Voltage,
+        inst:spec_16340_Energy,
+        inst:spec_16340_Internal_Resistance,
+        inst:spec_16340_Maximum_Charge_Current,
+        inst:spec_16340_Maximum_Discharge_Current,
+        inst:spec_16340_Minimum_Capacity,
+        inst:spec_16340_Nominal_Capacity,
+        inst:spec_16340_Nominal_Voltage,
+        inst:spec_16340_Standard_Charge_Current,
+        inst:spec_16340_Weight ;
+    rdfs:comment "Source: 16340-battery-datasheet.pdf" .
+
+inst:battery_FFH3DS a batt:Battery ;
+    rdfs:label "Battery: FFH3DS" ;
+    batt:batteryModel "FFH3DS" ;
+    batt:hasChemistry inst:Li-ion ;
+    batt:hasManufacturer inst:manufacturer_CATL ;
+    batt:hasSpecification inst:spec_FFH3DS_Charge_Voltage,
+        inst:spec_FFH3DS_Cycle_Life,
+        inst:spec_FFH3DS_Discharge_Cutoff_Voltage,
+        inst:spec_FFH3DS_Energy,
+        inst:spec_FFH3DS_Internal_Resistance,
+        inst:spec_FFH3DS_Maximum_Charge_Current,
+        inst:spec_FFH3DS_Maximum_Discharge_Current,
+        inst:spec_FFH3DS_Maximum_Operating_Temperature,
+        inst:spec_FFH3DS_Maximum_Storage_Temperature,
+        inst:spec_FFH3DS_Minimum_Operating_Temperature,
+        inst:spec_FFH3DS_Minimum_Storage_Temperature,
+        inst:spec_FFH3DS_Nominal_Capacity,
+        inst:spec_FFH3DS_Nominal_Voltage,
+        inst:spec_FFH3DS_Self-Discharge_Rate,
+        inst:spec_FFH3DS_Standard_Charge_Current,
+        inst:spec_FFH3DS_Standard_Discharge_Current,
+        inst:spec_FFH3DS_Weight ;
+    rdfs:comment "Source: CATL-86Ah-3.2V-LiFePO4-Prismatic-Battery-Cell-SpecificationDatasheet.pdf" .
+
+inst:battery_LIR2450 a batt:Battery ;
+    rdfs:label "Battery: LIR2450" ;
+    batt:batteryModel "LIR2450" ;
+    batt:hasChemistry inst:Li-ion ;
+    batt:hasManufacturer inst:manufacturer_EEMB_Co_Ltd ;
+    batt:hasSpecification inst:spec_LIR2450_Charge_Voltage,
+        inst:spec_LIR2450_Cycle_Life,
+        inst:spec_LIR2450_Discharge_Cutoff_Voltage,
+        inst:spec_LIR2450_Internal_Resistance,
+        inst:spec_LIR2450_Maximum_Charge_Current,
+        inst:spec_LIR2450_Maximum_Discharge_Current,
+        inst:spec_LIR2450_Maximum_Operating_Temperature,
+        inst:spec_LIR2450_Minimum_Operating_Temperature,
+        inst:spec_LIR2450_Nominal_Capacity,
+        inst:spec_LIR2450_Nominal_Voltage,
+        inst:spec_LIR2450_Self-Discharge_Rate,
+        inst:spec_LIR2450_Standard_Charge_Current,
+        inst:spec_LIR2450_Standard_Discharge_Current,
+        inst:spec_LIR2450_Weight ;
+    rdfs:comment "Source: lir2450_EEMB.pdf" .
+
+inst:battery_PL-9059156 a batt:Battery ;
+    rdfs:label "Battery: PL-9059156" ;
+    batt:batteryModel "PL-9059156" ;
+    batt:hasChemistry inst:Li-Polymer ;
+    batt:hasSpecification inst:spec_PL-9059156_Charge_Voltage,
+        inst:spec_PL-9059156_Cycle_Life,
+        inst:spec_PL-9059156_Discharge_Cutoff_Voltage,
+        inst:spec_PL-9059156_Internal_Resistance,
+        inst:spec_PL-9059156_Maximum_Charge_Current,
+        inst:spec_PL-9059156_Maximum_Discharge_Current,
+        inst:spec_PL-9059156_Maximum_Operating_Temperature,
+        inst:spec_PL-9059156_Maximum_Storage_Temperature,
+        inst:spec_PL-9059156_Minimum_Operating_Temperature,
+        inst:spec_PL-9059156_Minimum_Storage_Temperature,
+        inst:spec_PL-9059156_Nominal_Capacity,
+        inst:spec_PL-9059156_Nominal_Voltage,
+        inst:spec_PL-9059156_Standard_Charge_Current,
+        inst:spec_PL-9059156_Standard_Discharge_Current,
+        inst:spec_PL-9059156_Weight ;
+    rdfs:comment "Source: 3.7V9059156.pdf" .
+
 <http://battery-ontology.org/schema> a owl:Ontology ;
     rdfs:label "Battery Specification Ontology" ;
     rdfs:comment "An ontology for representing battery datasheet specifications, including electrical, physical, and thermal properties." .
-
-batt:ElectricalSpecification a owl:Class ;
-    rdfs:label "Electrical Specification" ;
-    rdfs:subClassOf batt:Specification .
-
-batt:LifecycleSpecification a owl:Class ;
-    rdfs:label "Lifecycle Specification" ;
-    rdfs:subClassOf batt:Specification .
-
-batt:PhysicalSpecification a owl:Class ;
-    rdfs:label "Physical Specification" ;
-    rdfs:subClassOf batt:Specification .
-
-batt:ThermalSpecification a owl:Class ;
-    rdfs:label "Thermal Specification" ;
-    rdfs:subClassOf batt:Specification .
 
 batt:batteryModel a owl:DatatypeProperty ;
     rdfs:label "Battery Model" ;
@@ -97,60 +165,376 @@ batt:unitName a owl:DatatypeProperty ;
 
 batt:unitSymbol a owl:DatatypeProperty ;
     rdfs:label "Unit Symbol" ;
-    rdfs:comment "Symbol of the unit (e.g., V, mAh, °C)" ;
+    rdfs:comment "Symbol of the unit (e.g., V, mAh, C)" ;
     rdfs:domain batt:Unit ;
     rdfs:range xsd:string .
 
-unit:Ampere a batt:Unit ;
-    batt:unitName "Ampere" ;
-    batt:unitSymbol "A" .
+inst:Li-Polymer a batt:Chemistry ;
+    batt:chemistryType "Li-Polymer" .
 
-unit:Celsius a batt:Unit ;
-    batt:unitName "Degree Celsius" ;
-    batt:unitSymbol "°C" .
+inst:manufacturer_CATL a batt:Manufacturer ;
+    batt:manufacturerName "CATL" .
 
-unit:Cycle a batt:Unit ;
-    batt:unitName "Charge/Discharge Cycle" ;
-    batt:unitSymbol "cycles" .
+inst:manufacturer_DNK_Power_o_Ltd a batt:Manufacturer ;
+    batt:manufacturerName "DNK Power o., Ltd." .
 
-unit:Gram a batt:Unit ;
-    batt:unitName "Gram" ;
-    batt:unitSymbol "g" .
+inst:manufacturer_EEMB_Co_Ltd a batt:Manufacturer ;
+    batt:manufacturerName "EEMB Co., Ltd." .
 
-unit:Milliampere_Hour a batt:Unit ;
-    batt:unitName "Milliampere-hour" ;
-    batt:unitSymbol "mAh" .
+inst:spec_16340_Charge_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "3.65"^^xsd:float ;
+    batt:specName "Charge Voltage" .
 
-unit:Milliohm a batt:Unit ;
-    batt:unitName "Milliohm" ;
-    batt:unitSymbol "mΩ" .
+inst:spec_16340_Discharge_Cutoff_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "2.0"^^xsd:float ;
+    batt:specName "Discharge Cutoff Voltage" .
+
+inst:spec_16340_Energy a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Watt_Hour ;
+    batt:hasValue "1.6"^^xsd:float ;
+    batt:specName "Energy" .
+
+inst:spec_16340_Internal_Resistance a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliohm ;
+    batt:hasValue "100.0"^^xsd:float ;
+    batt:specName "Internal Resistance" .
+
+inst:spec_16340_Maximum_Charge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "0.5"^^xsd:float ;
+    batt:specName "Maximum Charge Current" .
+
+inst:spec_16340_Maximum_Discharge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "1.0"^^xsd:float ;
+    batt:specName "Maximum Discharge Current" .
+
+inst:spec_16340_Minimum_Capacity a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliampere_Hour ;
+    batt:hasValue "470.0"^^xsd:float ;
+    batt:specName "Minimum Capacity" .
+
+inst:spec_16340_Nominal_Capacity a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliampere_Hour ;
+    batt:hasValue "500.0"^^xsd:float ;
+    batt:specName "Nominal Capacity" .
+
+inst:spec_16340_Nominal_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "3.2"^^xsd:float ;
+    batt:specName "Nominal Voltage" .
+
+inst:spec_16340_Standard_Charge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "0.1"^^xsd:float ;
+    batt:specName "Standard Charge Current" .
+
+inst:spec_16340_Weight a batt:PhysicalSpecification ;
+    batt:hasUnit unit:Gram ;
+    batt:hasValue "17.0"^^xsd:float ;
+    batt:specName "Weight" .
+
+inst:spec_FFH3DS_Charge_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "3.65"^^xsd:float ;
+    batt:specName "Charge Voltage" .
+
+inst:spec_FFH3DS_Cycle_Life a batt:LifecycleSpecification ;
+    batt:hasUnit unit:Cycle ;
+    batt:hasValue 3500 ;
+    batt:specName "Cycle Life" .
+
+inst:spec_FFH3DS_Discharge_Cutoff_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "2.5"^^xsd:float ;
+    batt:specName "Discharge Cutoff Voltage" .
+
+inst:spec_FFH3DS_Energy a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Watt_Hour ;
+    batt:hasValue "275.0"^^xsd:float ;
+    batt:specName "Energy" .
+
+inst:spec_FFH3DS_Internal_Resistance a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliohm ;
+    batt:hasValue "0.32"^^xsd:float ;
+    batt:specName "Internal Resistance" .
+
+inst:spec_FFH3DS_Maximum_Charge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "86.0"^^xsd:float ;
+    batt:specName "Maximum Charge Current" .
+
+inst:spec_FFH3DS_Maximum_Discharge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "86.0"^^xsd:float ;
+    batt:specName "Maximum Discharge Current" .
+
+inst:spec_FFH3DS_Maximum_Operating_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "60.0"^^xsd:float ;
+    batt:specName "Maximum Operating Temperature" .
+
+inst:spec_FFH3DS_Maximum_Storage_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "60.0"^^xsd:float ;
+    batt:specName "Maximum Storage Temperature" .
+
+inst:spec_FFH3DS_Minimum_Operating_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "-20.0"^^xsd:float ;
+    batt:specName "Minimum Operating Temperature" .
+
+inst:spec_FFH3DS_Minimum_Storage_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "-30.0"^^xsd:float ;
+    batt:specName "Minimum Storage Temperature" .
+
+inst:spec_FFH3DS_Nominal_Capacity a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliampere_Hour ;
+    batt:hasValue "86000.0"^^xsd:float ;
+    batt:specName "Nominal Capacity" .
+
+inst:spec_FFH3DS_Nominal_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "3.2"^^xsd:float ;
+    batt:specName "Nominal Voltage" .
+
+inst:spec_FFH3DS_Self-Discharge_Rate a batt:LifecycleSpecification ;
+    batt:hasUnit unit:Percent_Per_Month ;
+    batt:hasValue "3.0"^^xsd:float ;
+    batt:specName "Self-Discharge Rate" .
+
+inst:spec_FFH3DS_Standard_Charge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "43.0"^^xsd:float ;
+    batt:specName "Standard Charge Current" .
+
+inst:spec_FFH3DS_Standard_Discharge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "43.0"^^xsd:float ;
+    batt:specName "Standard Discharge Current" .
+
+inst:spec_FFH3DS_Weight a batt:PhysicalSpecification ;
+    batt:hasUnit unit:Gram ;
+    batt:hasValue "2250.0"^^xsd:float ;
+    batt:specName "Weight" .
+
+inst:spec_LIR2450_Charge_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "4.2"^^xsd:float ;
+    batt:specName "Charge Voltage" .
+
+inst:spec_LIR2450_Cycle_Life a batt:LifecycleSpecification ;
+    batt:hasUnit unit:Cycle ;
+    batt:hasValue 300 ;
+    batt:specName "Cycle Life" .
+
+inst:spec_LIR2450_Discharge_Cutoff_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "2.75"^^xsd:float ;
+    batt:specName "Discharge Cutoff Voltage" .
+
+inst:spec_LIR2450_Internal_Resistance a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliohm ;
+    batt:hasValue "400.0"^^xsd:float ;
+    batt:specName "Internal Resistance" .
+
+inst:spec_LIR2450_Maximum_Charge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "0.12"^^xsd:float ;
+    batt:specName "Maximum Charge Current" .
+
+inst:spec_LIR2450_Maximum_Discharge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "0.12"^^xsd:float ;
+    batt:specName "Maximum Discharge Current" .
+
+inst:spec_LIR2450_Maximum_Operating_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "60.0"^^xsd:float ;
+    batt:specName "Maximum Operating Temperature" .
+
+inst:spec_LIR2450_Minimum_Operating_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "-20.0"^^xsd:float ;
+    batt:specName "Minimum Operating Temperature" .
+
+inst:spec_LIR2450_Nominal_Capacity a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliampere_Hour ;
+    batt:hasValue "120.0"^^xsd:float ;
+    batt:specName "Nominal Capacity" .
+
+inst:spec_LIR2450_Nominal_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "3.6"^^xsd:float ;
+    batt:specName "Nominal Voltage" .
+
+inst:spec_LIR2450_Self-Discharge_Rate a batt:LifecycleSpecification ;
+    batt:hasUnit unit:Percent_Per_Month ;
+    batt:hasValue "5.0"^^xsd:float ;
+    batt:specName "Self-Discharge Rate" .
+
+inst:spec_LIR2450_Standard_Charge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "0.024"^^xsd:float ;
+    batt:specName "Standard Charge Current" .
+
+inst:spec_LIR2450_Standard_Discharge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "0.024"^^xsd:float ;
+    batt:specName "Standard Discharge Current" .
+
+inst:spec_LIR2450_Weight a batt:PhysicalSpecification ;
+    batt:hasUnit unit:Gram ;
+    batt:hasValue "5.0"^^xsd:float ;
+    batt:specName "Weight" .
+
+inst:spec_PL-9059156_Charge_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "4.2"^^xsd:float ;
+    batt:specName "Charge Voltage" .
+
+inst:spec_PL-9059156_Cycle_Life a batt:LifecycleSpecification ;
+    batt:hasUnit unit:Cycle ;
+    batt:hasValue 300 ;
+    batt:specName "Cycle Life" .
+
+inst:spec_PL-9059156_Discharge_Cutoff_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "2.75"^^xsd:float ;
+    batt:specName "Discharge Cutoff Voltage" .
+
+inst:spec_PL-9059156_Internal_Resistance a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliohm ;
+    batt:hasValue "15.0"^^xsd:float ;
+    batt:specName "Internal Resistance" .
+
+inst:spec_PL-9059156_Maximum_Charge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "10.0"^^xsd:float ;
+    batt:specName "Maximum Charge Current" .
+
+inst:spec_PL-9059156_Maximum_Discharge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "20.0"^^xsd:float ;
+    batt:specName "Maximum Discharge Current" .
+
+inst:spec_PL-9059156_Maximum_Operating_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "60.0"^^xsd:float ;
+    batt:specName "Maximum Operating Temperature" .
+
+inst:spec_PL-9059156_Maximum_Storage_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "45.0"^^xsd:float ;
+    batt:specName "Maximum Storage Temperature" .
+
+inst:spec_PL-9059156_Minimum_Operating_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "-20.0"^^xsd:float ;
+    batt:specName "Minimum Operating Temperature" .
+
+inst:spec_PL-9059156_Minimum_Storage_Temperature a batt:ThermalSpecification ;
+    batt:hasUnit unit:Celsius ;
+    batt:hasValue "-20.0"^^xsd:float ;
+    batt:specName "Minimum Storage Temperature" .
+
+inst:spec_PL-9059156_Nominal_Capacity a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Milliampere_Hour ;
+    batt:hasValue "10000.0"^^xsd:float ;
+    batt:specName "Nominal Capacity" .
+
+inst:spec_PL-9059156_Nominal_Voltage a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Volt ;
+    batt:hasValue "3.7"^^xsd:float ;
+    batt:specName "Nominal Voltage" .
+
+inst:spec_PL-9059156_Standard_Charge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "2.0"^^xsd:float ;
+    batt:specName "Standard Charge Current" .
+
+inst:spec_PL-9059156_Standard_Discharge_Current a batt:ElectricalSpecification ;
+    batt:hasUnit unit:Ampere ;
+    batt:hasValue "2.0"^^xsd:float ;
+    batt:specName "Standard Discharge Current" .
+
+inst:spec_PL-9059156_Weight a batt:PhysicalSpecification ;
+    batt:hasUnit unit:Gram ;
+    batt:hasValue "196.0"^^xsd:float ;
+    batt:specName "Weight" .
 
 unit:Percent_Per_Month a batt:Unit ;
     batt:unitName "Percent per Month" ;
     batt:unitSymbol "%/month" .
 
-unit:Volt a batt:Unit ;
-    batt:unitName "Volt" ;
-    batt:unitSymbol "V" .
-
 unit:Watt_Hour a batt:Unit ;
     batt:unitName "Watt-hour" ;
     batt:unitSymbol "Wh" .
 
+inst:Li-ion a batt:Chemistry ;
+    batt:chemistryType "Li-ion" .
+
+unit:Cycle a batt:Unit ;
+    batt:unitName "Charge/Discharge Cycle" ;
+    batt:unitSymbol "cycles" .
+
+batt:PhysicalSpecification a owl:Class ;
+    rdfs:label "Physical Specification" ;
+    rdfs:subClassOf batt:Specification .
+
+unit:Gram a batt:Unit ;
+    batt:unitName "Gram" ;
+    batt:unitSymbol "g" .
+
+unit:Milliohm a batt:Unit ;
+    batt:unitName "Milliohm" ;
+    batt:unitSymbol "mOhm" .
+
+batt:LifecycleSpecification a owl:Class ;
+    rdfs:label "Lifecycle Specification" ;
+    rdfs:subClassOf batt:Specification .
+
 batt:Manufacturer a owl:Class ;
     rdfs:label "Manufacturer" .
+
+unit:Milliampere_Hour a batt:Unit ;
+    batt:unitName "Milliampere-hour" ;
+    batt:unitSymbol "mAh" .
 
 batt:Battery a owl:Class ;
     rdfs:label "Battery" ;
     rdfs:comment "A battery cell or pack described by a datasheet." .
 
-batt:Chemistry a owl:Class ;
-    rdfs:label "Battery Chemistry" .
-
 batt:Specification a owl:Class ;
     rdfs:label "Specification" ;
     rdfs:comment "A technical specification of a battery." .
 
+batt:Chemistry a owl:Class ;
+    rdfs:label "Battery Chemistry" .
+
+batt:ThermalSpecification a owl:Class ;
+    rdfs:label "Thermal Specification" ;
+    rdfs:subClassOf batt:Specification .
+
+unit:Celsius a batt:Unit ;
+    batt:unitName "Degree Celsius" ;
+    batt:unitSymbol "C" .
+
 batt:Unit a owl:Class ;
     rdfs:label "Unit of Measurement" .
+
+unit:Volt a batt:Unit ;
+    batt:unitName "Volt" ;
+    batt:unitSymbol "V" .
+
+unit:Ampere a batt:Unit ;
+    batt:unitName "Ampere" ;
+    batt:unitSymbol "A" .
+
+batt:ElectricalSpecification a owl:Class ;
+    rdfs:label "Electrical Specification" ;
+    rdfs:subClassOf batt:Specification .
 

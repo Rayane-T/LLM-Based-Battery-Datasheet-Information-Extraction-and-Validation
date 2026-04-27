@@ -38,6 +38,7 @@ IMPORTANT RULES:
 6. For current: If stated in mA, convert to A (divide by 1000).
 7. For C-rate currents: Calculate actual current = C-rate x nominal capacity. For example, 0.2C for a 500mAh battery = 0.1A.
 8. Return ONLY valid JSON matching the schema. No explanations, no markdown formatting.
+9. For chemistry: if the datasheet explicitly states LiFePO4, LFP, or iron phosphate, use "LiFePO4". A nominal voltage around 3.2V and charge voltage around 3.65V are strong indicators of LiFePO4.
 """
 
 
