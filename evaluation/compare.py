@@ -1,10 +1,3 @@
-"""
-Comparison utilities for extraction evaluation.
-
-Pretty-prints side-by-side comparison of predicted vs ground truth values
-and evaluation metrics using rich formatting.
-"""
-
 import json
 import os
 import sys
@@ -26,10 +19,9 @@ from evaluation.metrics import (
 console = Console()
 
 
-def format_value(value: Optional[object]) -> str:
-    """Format a value for display, showing None as '—'."""
+def format_value(value) -> str:
     if value is None:
-        return "—"
+        return "-"
     if isinstance(value, float):
         if value == int(value):
             return str(int(value))
@@ -37,19 +29,9 @@ def format_value(value: Optional[object]) -> str:
     return str(value)
 
 
-def print_field_comparison(
-    filename: str,
-    evaluation: dict,
-) -> None:
-    """
-    Print a detailed field-by-field comparison table for a single datasheet.
-    
-    Args:
-        filename: Name of the datasheet file.
-        evaluation: Output of evaluate_single().
-    """
+def print_field_comparison(filename: str, evaluation: dict) -> None:
     table = Table(
-        title=f"📊 Field Comparison: {filename}",
+        title=f"Field Comparison: {filename}",
         show_header=True,
         header_style="bold cyan",
     )
@@ -70,7 +52,7 @@ def print_field_comparison(
         gt = format_value(result["ground_truth"])
         match = result["match"]
 
-        match_icon = "✅" if match else "❌"
+        match_icon = "OK" if match else "X"
         row_style = None if match else "dim red"
 
         table.add_row(field, pred, gt, match_icon, style=row_style)
@@ -78,17 +60,7 @@ def print_field_comparison(
     console.print(table)
 
 
-def print_metrics_summary(
-    metrics: dict,
-    title: str = "Metrics Summary",
-) -> None:
-    """
-    Print a formatted metrics summary panel.
-    
-    Args:
-        metrics: Dictionary with precision, recall, f1, accuracy.
-        title: Title for the panel.
-    """
+def print_metrics_summary(metrics: dict, title: str = "Metrics Summary") -> None:
     text = Text()
     text.append(f"  Precision:  ", style="bold")
     text.append(f"{metrics['precision']:.2%}\n", style="green" if metrics['precision'] >= 0.8 else "yellow")
@@ -101,7 +73,7 @@ def print_metrics_summary(
     text.append(f"  TP: {metrics['true_positives']}  FP: {metrics['false_positives']}  "
                 f"FN: {metrics['false_negatives']}  TN: {metrics['true_negatives']}")
 
-    console.print(Panel(text, title=f"📈 {title}", border_style="cyan"))
+    console.print(Panel(text, title=title, border_style="cyan"))
 
 
 def print_full_evaluation(
@@ -109,26 +81,12 @@ def print_full_evaluation(
     ground_truths: dict,
     strategy_name: str = "Extraction",
 ) -> dict:
-    """
-    Run evaluation and print full comparison report.
-    
-    Args:
-        predictions: Dict mapping filename → predicted spec dict.
-        ground_truths: Dict mapping filename → ground truth spec dict.
-        strategy_name: Name of the strategy for display.
-    
-    Returns:
-        Full evaluation results dictionary.
-    """
     console.print(f"\n{'='*70}")
-    console.print(
-        f"[bold cyan]🔬 Evaluation Report: {strategy_name}[/bold cyan]"
-    )
+    console.print(f"[bold cyan]Evaluation Report: {strategy_name}[/bold cyan]")
     console.print(f"{'='*70}\n")
 
     results = evaluate_batch(predictions, ground_truths)
 
-    # Print per-file comparisons
     for filename, evaluation in results["per_file"].items():
         print_field_comparison(filename, evaluation)
         print_metrics_summary(
@@ -137,7 +95,6 @@ def print_full_evaluation(
         )
         console.print()
 
-    # Print aggregate metrics
     print_metrics_summary(
         results["aggregate"],
         title=f"AGGREGATE Metrics ({strategy_name})",
@@ -151,17 +108,9 @@ def compare_strategies(
     few_shot_predictions: dict,
     ground_truths: dict,
 ) -> None:
-    """
-    Compare zero-shot vs few-shot extraction results side by side.
-    
-    Args:
-        zero_shot_predictions: Zero-shot extraction results.
-        few_shot_predictions: Few-shot extraction results.
-        ground_truths: Ground truth annotations.
-    """
-    console.print("\n[bold magenta]{'='*70}[/bold magenta]")
-    console.print("[bold magenta]📊 Strategy Comparison: Zero-Shot vs Few-Shot[/bold magenta]")
-    console.print("[bold magenta]{'='*70}[/bold magenta]\n")
+    console.print(f"\n{'='*70}")
+    console.print("[bold magenta]Strategy Comparison: Zero-Shot vs Few-Shot[/bold magenta]")
+    console.print(f"{'='*70}\n")
 
     zs_results = evaluate_batch(zero_shot_predictions, ground_truths)
     fs_results = evaluate_batch(few_shot_predictions, ground_truths)
@@ -184,9 +133,9 @@ def compare_strategies(
         fs_val = fs_results["aggregate"][metric]
 
         if zs_val > fs_val:
-            winner = "Zero-Shot 🏆"
+            winner = "Zero-Shot"
         elif fs_val > zs_val:
-            winner = "Few-Shot 🏆"
+            winner = "Few-Shot"
         else:
             winner = "Tie"
 
@@ -201,13 +150,11 @@ def compare_strategies(
 
 
 def load_predictions(filepath: str) -> dict:
-    """Load prediction results from a JSON file."""
     with open(filepath, "r") as f:
         return json.load(f)
 
 
 def load_ground_truth(filepath: str = None) -> dict:
-    """Load ground truth from the evaluation directory."""
     if filepath is None:
         filepath = os.path.join(
             os.path.dirname(__file__),

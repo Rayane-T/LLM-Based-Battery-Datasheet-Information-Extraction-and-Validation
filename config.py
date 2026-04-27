@@ -1,31 +1,25 @@
-"""
-Central configuration for the battery datasheet extraction pipeline.
-Loads API keys from environment variables or .env file.
-"""
-
 import os
 from dotenv import load_dotenv
 
-# Load .env file if present
 load_dotenv()
 
-# ─── LLM Configuration ───────────────────────────────────────────────
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "ollama")
+
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.0"))
 LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "4096"))
 
-# ─── Paths ────────────────────────────────────────────────────────────
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCUMENTS_DIR = os.path.join(PROJECT_ROOT, "documents")
 OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs")
 EVALUATION_DIR = os.path.join(PROJECT_ROOT, "evaluation")
 
-# Ensure output directory exists
 os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
-# ─── Extraction Settings ─────────────────────────────────────────────
-# Fields to extract from battery datasheets
 EXTRACTION_FIELDS = [
     "battery_model",
     "manufacturer",
@@ -50,12 +44,9 @@ EXTRACTION_FIELDS = [
     "self_discharge_rate_percent_per_month",
 ]
 
-# ─── Knowledge Graph Settings ────────────────────────────────────────
 ONTOLOGY_NAMESPACE = "http://battery-ontology.org/schema#"
 INSTANCE_NAMESPACE = "http://battery-ontology.org/instance#"
 
-# ─── Validation Settings ─────────────────────────────────────────────
-# Physical plausibility bounds per chemistry type
 VOLTAGE_RANGES = {
     "LiFePO4": {"min": 2.0, "max": 3.8},
     "Li-ion": {"min": 2.5, "max": 4.35},
@@ -66,8 +57,8 @@ VOLTAGE_RANGES = {
 }
 
 TEMPERATURE_BOUNDS = {
-    "operating_min": -60,  # °C
-    "operating_max": 85,   # °C
-    "storage_min": -40,    # °C
-    "storage_max": 60,     # °C
+    "operating_min": -60,
+    "operating_max": 85,
+    "storage_min": -40,
+    "storage_max": 60,
 }

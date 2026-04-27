@@ -1,9 +1,3 @@
-"""
-SPARQL query utilities for the battery knowledge graph.
-
-Provides predefined queries for common battery data retrieval tasks.
-"""
-
 import logging
 import sys
 import os
@@ -17,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 def query_all_batteries(graph: Graph) -> list:
-    """List all batteries in the knowledge graph."""
     query = """
     PREFIX batt: <http://battery-ontology.org/schema#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -49,7 +42,6 @@ def query_all_batteries(graph: Graph) -> list:
 
 
 def query_battery_specs(graph: Graph, model_name: str) -> list:
-    """Get all specifications for a specific battery model."""
     query = """
     PREFIX batt: <http://battery-ontology.org/schema#>
 
@@ -80,10 +72,7 @@ def query_battery_specs(graph: Graph, model_name: str) -> list:
     return results
 
 
-def query_batteries_by_voltage_range(
-    graph: Graph, min_v: float, max_v: float
-) -> list:
-    """Find batteries with nominal voltage in a given range."""
+def query_batteries_by_voltage_range(graph: Graph, min_v: float, max_v: float) -> list:
     query = """
     PREFIX batt: <http://battery-ontology.org/schema#>
 
@@ -109,7 +98,6 @@ def query_batteries_by_voltage_range(
 
 
 def query_batteries_by_chemistry(graph: Graph, chemistry: str) -> list:
-    """Find all batteries of a given chemistry type."""
     query = """
     PREFIX batt: <http://battery-ontology.org/schema#>
 
@@ -137,12 +125,10 @@ def query_batteries_by_chemistry(graph: Graph, chemistry: str) -> list:
 
 
 def query_graph_statistics(graph: Graph) -> dict:
-    """Get summary statistics of the knowledge graph."""
     stats = {
         "total_triples": len(graph),
     }
 
-    # Count batteries
     q = """
     PREFIX batt: <http://battery-ontology.org/schema#>
     SELECT (COUNT(?b) AS ?cnt) WHERE { ?b a batt:Battery }
@@ -150,7 +136,6 @@ def query_graph_statistics(graph: Graph) -> dict:
     for row in graph.query(q):
         stats["battery_count"] = int(row.cnt)
 
-    # Count specifications
     q = """
     PREFIX batt: <http://battery-ontology.org/schema#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -159,7 +144,6 @@ def query_graph_statistics(graph: Graph) -> dict:
     for row in graph.query(q):
         stats["specification_count"] = int(row.cnt)
 
-    # Count by spec type
     q = """
     PREFIX batt: <http://battery-ontology.org/schema#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -179,12 +163,11 @@ def query_graph_statistics(graph: Graph) -> dict:
 
 
 def print_graph_summary(graph: Graph) -> None:
-    """Print a human-readable summary of the knowledge graph."""
     stats = query_graph_statistics(graph)
     batteries = query_all_batteries(graph)
 
     print(f"\n{'='*60}")
-    print(f"📊 Knowledge Graph Summary")
+    print(f"Knowledge Graph Summary")
     print(f"{'='*60}")
     print(f"Total triples: {stats['total_triples']}")
     print(f"Batteries: {stats.get('battery_count', 0)}")
@@ -199,31 +182,6 @@ def print_graph_summary(graph: Graph) -> None:
     for b in batteries:
         chem = f" ({b['chemistry']})" if b['chemistry'] else ""
         mfr = f" by {b['manufacturer']}" if b['manufacturer'] else ""
-        print(f"  • {b['model']}{chem}{mfr}")
+        print(f"  - {b['model']}{chem}{mfr}")
 
     print()
-
-
-if __name__ == "__main__":
-    from src.knowledge_graph.graph_builder import build_knowledge_graph
-    import json
-
-    gt_path = os.path.join(os.path.dirname(__file__), "..", "..", "evaluation", "ground_truth.json")
-    with open(gt_path) as f:
-        gt_data = json.load(f)
-
-    graph = build_knowledge_graph(gt_data)
-    print_graph_summary(graph)
-
-    # Example queries
-    print("\n--- Batteries with 3.0-3.7V nominal voltage ---")
-    for b in query_batteries_by_voltage_range(graph, 3.0, 3.7):
-        print(f"  {b['model']}: {b['voltage']}V")
-
-    print("\n--- LiFePO4 batteries ---")
-    for b in query_batteries_by_chemistry(graph, "LiFePO4"):
-        print(f"  {b['model']} by {b['manufacturer']}")
-
-    print("\n--- Specs for LIR2450 ---")
-    for s in query_battery_specs(graph, "LIR2450"):
-        print(f"  {s['spec_name']}: {s['value']} {s['unit']}")
