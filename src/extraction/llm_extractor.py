@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+import time
 from typing import Literal
 
 from openai import OpenAI
@@ -41,20 +42,32 @@ def get_llm_client(model_name: str) -> OpenAI:
         raise ValueError("OPENAI_API_KEY is not set in .env")
     return OpenAI(api_key=OPENAI_API_KEY)
 
-def call_llm(messages: list, model: str = None) -> str:
+def call_llm(messages: list, model: str = None, max_retries: int = 3) -> str:
     model = model or LLM_MODEL
     client = get_llm_client(model)
     request_model = model.split("/", 1)[1] if model.startswith("ollama/") else model
 
-    response = client.chat.completions.create(
-        model=request_model,
-        messages=messages,
-        temperature=LLM_TEMPERATURE,
-        max_tokens=LLM_MAX_TOKENS,
-    )
-
-    content = response.choices[0].message.content.strip()
-    return content
+    for attempt in range(max_retries + 1):
+        try:
+            response = client.chat.completions.create(
+                model=request_model,
+                messages=messages,
+                temperature=LLM_TEMPERATURE,
+                max_tokens=LLM_MAX_TOKENS,
+            )
+            content = response.choices[0].message.content.strip()
+            return content
+        except Exception as e:
+            error_str = str(e)
+            if "429" in error_str and attempt < max_retries:
+                # Parse retryDelay from error message if available
+                import re
+                delay_match = re.search(r'retryDelay.*?(\d+)', error_str)
+                wait = int(delay_match.group(1)) + 5 if delay_match else 30
+                logger.warning(f"Rate limited, waiting {wait}s before retry {attempt+1}/{max_retries}...")
+                time.sleep(wait)
+            else:
+                raise
 
 def parse_llm_response(response_text: str) -> dict:
     text = response_text.strip()
@@ -93,7 +106,9 @@ def extract_all_datasheets(
     model: str = None,
 ) -> list:
     results = []
-    for doc in documents:
+    for i, doc in enumerate(documents):
+        if i > 0:
+            time.sleep(5)  # Rate-limit delay for free-tier APIs
         logger.info(f"processing {doc.filename}")
         try:
             spec = extract_specifications(

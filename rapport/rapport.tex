@@ -1,0 +1,353 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit}
+\usepackage{caption}
+\usepackage{enumitem}
+
+\geometry{margin=2.5cm}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.97}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+}
+\lstset{style=mystyle}
+
+\title{\textbf{LLM-Based Battery Datasheet\\Information Extraction and Validation}\\[1em]
+\large Rapport de Projet --- Donn\'ees Complexes}
+\author{Groupe}
+\date{Mai 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+Les fiches techniques (datasheets) de batteries contiennent des sp\'ecifications critiques telles que la tension nominale, la capacit\'e, le taux de d\'echarge, la plage de temp\'erature de fonctionnement et la r\'esistance interne. Cependant, ces documents sont souvent fournis dans des formats non structur\'es (PDF), ce qui rend l'int\'egration automatique dans des bases de donn\'ees difficile.
+
+Les mod\`eles de langage (LLMs) offrent de nouvelles possibilit\'es pour extraire automatiquement des informations structur\'ees \`a partir de tels documents techniques. N\'eanmoins, les LLMs peuvent g\'en\'erer des sorties incoh\'erentes ou des valeurs hallucin\'ees qui ne sont pas pr\'esentes dans le document original.
+
+Ce projet vise \`a concevoir un pipeline intelligent qui \textbf{extrait}, \textbf{structure} et \textbf{valide} les sp\'ecifications de batteries en utilisant des LLMs et des graphes de connaissances.
+
+\subsection{Jeu de donn\'ees}
+
+Le projet utilise 4 fiches techniques de batteries couvrant diff\'erentes chimies et formats~:
+
+\begin{table}[H]
+\centering
+\caption{Batteries analys\'ees}
+\begin{tabular}{llllr}
+\toprule
+\textbf{Mod\`ele} & \textbf{Fabricant} & \textbf{Chimie} & \textbf{Tension} & \textbf{Capacit\'e} \\
+\midrule
+16340 & DNK Power & LiFePO4 & 3.2\,V & 500\,mAh \\
+PL-9059156 & BatterySpace & Li-Polymer & 3.7\,V & 10\,000\,mAh \\
+FFH3DS (86Ah) & CATL & LiFePO4 & 3.2\,V & 86\,000\,mAh \\
+LIR2450 & EEMB & Li-ion & 3.6\,V & 120\,mAh \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Architecture du Pipeline}
+
+Le syst\`eme est organis\'e en un pipeline s\'equentiel. Le texte brut est d'abord extrait des PDF, puis soumis au LLM qui produit un JSON structur\'e. Ces r\'esultats sont \'evalu\'es par rapport \`a une v\'erit\'e terrain et alimentent un graphe de connaissances RDF, qui est ensuite interrog\'e pour d\'etecter d'\'eventuelles hallucinations.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.0cm and 1.5cm,
+    block/.style={rectangle, draw, fill=blue!10, text width=3.8cm, text centered, rounded corners, minimum height=0.9cm, font=\small},
+    arrow/.style={-{Stealth[length=2.5mm]}, thick}
+]
+\node[block] (pdf) {1. Parsing PDF};
+\node[block, below=of pdf] (llm) {2. Extraction LLM};
+\node[block, below left=1.0cm and -0.3cm of llm] (eval) {3. \'Evaluation};
+\node[block, below right=1.0cm and -0.3cm of llm] (kg) {4. Graphe de connaissances};
+\node[block, below left=1.0cm and -0.3cm of kg] (rval) {5. Validation Python};
+\node[block, below right=1.0cm and -0.3cm of kg] (gval) {6. Validation SPARQL};
+
+\draw[arrow] (pdf) -- (llm);
+\draw[arrow] (llm) -- (eval);
+\draw[arrow] (llm) -- (kg);
+\draw[arrow] (kg) -- (rval);
+\draw[arrow] (kg) -- (gval);
+\end{tikzpicture}
+\caption{Architecture du pipeline}
+\label{fig:arch}
+\end{figure}
+
+\section{Extraction LLM (Niveau 1)}
+
+\subsection{Parsing PDF}
+
+La premi\`ere \'etape consiste \`a extraire le texte brut de chaque page du PDF \`a l'aide de la biblioth\`eque PyMuPDF. Un nettoyage est appliqu\'e pour supprimer les espaces multiples, les lignes vides r\'ep\'et\'ees et les caract\`eres isol\'es, afin de fournir au LLM un texte aussi propre que possible.
+
+\subsection{Sch\'ema d'extraction}
+
+Pour garantir que le LLM produise une sortie exploitable, nous d\'efinissons un sch\'ema strict de champs \`a extraire. Ce sch\'ema est impl\'ement\'e avec \textbf{Pydantic}, une biblioth\`eque Python de validation de donn\'ees. Pydantic permet de d\'efinir des mod\`eles de donn\'ees typ\'es~: chaque champ a un type attendu (float, int, string) et peut \^etre optionnel. Quand le LLM renvoie un JSON, Pydantic v\'erifie automatiquement que la structure et les types sont corrects, rejetant toute r\'eponse mal form\'ee.
+
+Les champs couvrent~:
+\begin{itemize}[noitemsep]
+    \item \textbf{Identit\'e}~: mod\`ele, fabricant, chimie
+    \item \textbf{\'Electrique}~: tension nominale, capacit\'e, r\'esistance interne, tensions de charge/d\'echarge, courants standard et maximum
+    \item \textbf{Thermique}~: temp\'eratures de fonctionnement et de stockage (min/max)
+    \item \textbf{Physique et cycle de vie}~: poids, \'energie, nombre de cycles, taux d'auto-d\'echarge
+\end{itemize}
+
+\subsection{Strat\'egies de prompting}
+
+Deux strat\'egies de prompting sont impl\'ement\'ees et compar\'ees~:
+
+\subsubsection{Zero-Shot}
+Le LLM re\c{c}oit uniquement les r\`egles d'extraction, la description du sch\'ema JSON attendu et le texte du datasheet. Aucun exemple concret n'est fourni~: le mod\`ele doit inf\'erer le format de sortie \`a partir de la seule description du sch\'ema.
+
+\subsubsection{Few-Shot}
+En plus des m\^emes instructions, un exemple complet est inclus dans la conversation~: une fiche technique fictive et le JSON correspondant. Cet exemple montre explicitement comment convertir les C-rates en courants r\'eels (par ex. 0.2C pour 500\,mAh = 0.1\,A) et comment g\'erer les valeurs absentes (\texttt{null}).
+
+\subsection{R\'esultats d'extraction}
+
+Les r\'esultats sont \'evalu\'es en comparant chaque champ extrait \`a une v\'erit\'e terrain annot\'ee manuellement. Les m\'etriques utilis\'ees sont~:
+\begin{itemize}[noitemsep]
+    \item \textbf{Precision}~: parmi les valeurs que le LLM a extraites, quelle proportion est correcte~?
+    \item \textbf{Recall}~: parmi les valeurs attendues dans la v\'erit\'e terrain, quelle proportion a \'et\'e trouv\'ee~?
+    \item \textbf{F1 Score}~: moyenne harmonique de la precision et du recall
+    \item \textbf{Accuracy}~: proportion globale de pr\'edictions correctes, incluant les vrais n\'egatifs
+\end{itemize}
+
+Les valeurs num\'eriques sont compar\'ees avec une tol\'erance de 5\%, et les cha\^ines de caract\`eres utilisent une correspondance par inclusion.
+
+\paragraph{Comprendre les m\'etriques.} Pour chaque champ, la comparaison avec la v\'erit\'e terrain produit l'un des quatre cas suivants~:
+\begin{itemize}[noitemsep]
+    \item \textbf{True Positive (TP)}~: le LLM a extrait une valeur et elle est correcte. Exemple~: le LLM renvoie \texttt{nominal\_voltage\_V: 3.2} et la v\'erit\'e terrain confirme 3.2\,V.
+    \item \textbf{False Positive (FP)}~: le LLM a extrait une valeur mais elle est fausse. Exemple~: le LLM renvoie \texttt{chemistry: "Li-ion"} alors que la v\'erit\'e terrain indique \texttt{"LiFePO4"}.
+    \item \textbf{False Negative (FN)}~: la v\'erit\'e terrain contient une valeur mais le LLM ne l'a pas trouv\'ee (il a renvoy\'e \texttt{null}).
+    \item \textbf{True Negative (TN)}~: la v\'erit\'e terrain n'a pas de valeur pour ce champ et le LLM a correctement renvoy\'e \texttt{null}.
+\end{itemize}
+
+\subsubsection{R\'esultats Zero-Shot}
+
+\begin{table}[H]
+\centering
+\caption{R\'esultats d'\'evaluation --- strat\'egie zero-shot, Gemini 2.5 Flash}
+\label{tab:eval-zs}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Batterie} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Recall} & \textbf{F1} & \textbf{Acc.} \\
+\midrule
+16340 & 13 & 1 & 0 & 7 & 92.9\% & 100\% & 96.3\% & 95.2\% \\
+9059156 & 17 & 0 & 1 & 3 & 100\% & 94.4\% & 97.1\% & 95.2\% \\
+FFH3DS & 20 & 0 & 0 & 1 & 100\% & 100\% & 100\% & 100\% \\
+LIR2450 & 17 & 3 & 0 & 1 & 85.0\% & 100\% & 91.9\% & 85.7\% \\
+\midrule
+\textbf{Agr\'eg\'e} & \textbf{67} & \textbf{4} & \textbf{1} & \textbf{12} & \textbf{94.4\%} & \textbf{98.5\%} & \textbf{96.4\%} & \textbf{94.0\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{R\'esultats Few-Shot}
+
+\begin{table}[H]
+\centering
+\caption{R\'esultats d'\'evaluation --- strat\'egie few-shot, Gemini 2.5 Flash}
+\label{tab:eval-fs}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Batterie} & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} & \textbf{Prec.} & \textbf{Recall} & \textbf{F1} & \textbf{Acc.} \\
+\midrule
+16340 & 14 & 0 & 0 & 7 & 100\% & 100\% & 100\% & 100\% \\
+9059156 & 12 & 6 & 1 & 2 & 66.7\% & 92.3\% & 77.4\% & 66.7\% \\
+FFH3DS & 20 & 0 & 0 & 1 & 100\% & 100\% & 100\% & 100\% \\
+LIR2450 & 17 & 3 & 0 & 1 & 85.0\% & 100\% & 91.9\% & 85.7\% \\
+\midrule
+\textbf{Agr\'eg\'e} & \textbf{63} & \textbf{9} & \textbf{1} & \textbf{11} & \textbf{87.5\%} & \textbf{98.4\%} & \textbf{92.6\%} & \textbf{88.1\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Analyse des r\'esultats}
+
+Le zero-shot atteint un F1 agr\'eg\'e de \textbf{96.4\%}, sup\'erieur au few-shot (\textbf{92.6\%}). Ce r\'esultat est contre-intuitif~: fournir un exemple au LLM n'am\'eliore pas syst\'ematiquement l'extraction, et peut m\^eme la d\'egrader.
+
+Le few-shot introduit des erreurs sur la batterie 9059156, o\`u le mod\`ele hallucine plusieurs valeurs num\'eriques (capacit\'e 11\,500 au lieu de 10\,000\,mAh, courants de 2.3 au lieu de 2.0\,A). L'exemple fourni semble \textbf{biaiser} le mod\`ele vers des conversions de C-rate inappropri\'ees. 
+
+Les deux strat\'egies inventent \'egalement des valeurs de temp\'erature de stockage et de capacit\'e minimale pour la LIR2450, absentes du datasheet.
+
+En revanche, le few-shot excelle sur deux batteries~: le 16340 et le FFH3DS obtiennent tous deux un F1 de 100\%, l\`a o\`u le zero-shot commet une erreur de chimie (LiFePO4 class\'e comme Li-ion) sur le 16340.
+
+En r\'esum\'e~:
+\begin{itemize}[noitemsep]
+    \item Le \textbf{zero-shot} est plus fiable en g\'en\'eral, avec seulement 4 FP et 1 FN.
+    \item Le \textbf{few-shot} peut exceller sur certaines batteries (F1 parfait) mais introduit davantage d'hallucinations num\'eriques (9 FP).
+    \item Les deux strat\'egies \'echouent \`a extraire le fabricant de la batterie 9059156.
+\end{itemize}
+
+Ces erreurs justifient le recours au graphe de connaissances~: seule une v\'erification crois\'ee entre plusieurs champs permet de d\'etecter ce type d'hallucination.
+
+\section{Graphe de Connaissances (Niveau 2)}
+
+L'objectif de cette partie est d'organiser les donn\'ees extraites dans une repr\'esentation s\'emantique interrogeable. Plut\^ot que de stocker les r\'esultats dans un simple fichier JSON, nous construisons un \textbf{graphe de connaissances RDF} qui encode explicitement les relations entre les entit\'es (batteries, sp\'ecifications, fabricants, chimies). Cette structuration permet ensuite d'interroger les donn\'ees avec le langage SPARQL et, surtout, de d\'efinir des r\`egles de validation qui exploitent les relations entre entit\'es.
+
+\subsection{Ontologie}
+
+L'ontologie d\'efinit le vocabulaire et la structure du graphe. Elle d\'ecrit quelles entit\'es existent dans notre domaine et comment elles sont reli\'ees entre elles.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1.6cm and 2.2cm,
+    class/.style={rectangle, draw, fill=orange!20, text width=2.8cm, text centered, rounded corners, minimum height=0.9cm, font=\small},
+    subclass/.style={rectangle, draw, fill=green!15, text width=2.8cm, text centered, rounded corners, minimum height=0.7cm, font=\footnotesize},
+    prop/.style={-{Stealth}, thick, font=\scriptsize},
+    inhprop/.style={-{Stealth}, thick, dashed, font=\scriptsize},
+]
+\node[class] (bat) {Battery};
+\node[class, right=of bat] (spec) {Specification};
+\node[class, below left=1.6cm and 0.2cm of bat] (mfr) {Manufacturer};
+\node[class, below right=1.6cm and 0.2cm of bat] (chem) {Chemistry};
+\node[class, right=of spec] (unit) {Unit};
+
+\node[subclass, below left=1.3cm and -0.5cm of spec] (elec) {ElectricalSpec};
+\node[subclass, below right=1.3cm and -0.5cm of spec] (therm) {ThermalSpec};
+\node[subclass, below=0.5cm of elec] (phys) {PhysicalSpec};
+\node[subclass, below=0.5cm of therm] (life) {LifecycleSpec};
+
+\draw[prop] (bat) -- node[above] {hasSpec} (spec);
+\draw[prop] (bat) -- node[left] {hasMfr} (mfr);
+\draw[prop] (bat) -- node[right] {hasChem} (chem);
+\draw[prop] (spec) -- node[above] {hasUnit} (unit);
+\draw[inhprop] (elec) -- (spec);
+\draw[inhprop] (therm) -- (spec);
+\draw[inhprop] (phys) -- (spec);
+\draw[inhprop] (life) -- (spec);
+\end{tikzpicture}
+\caption{Ontologie OWL --- Fl\`eches pleines~: relations, pointill\'es~: h\'eritage}
+\label{fig:onto}
+\end{figure}
+
+Par exemple, une batterie \texttt{LIR2450} est reli\'ee \`a son fabricant \texttt{EEMB} via la relation \texttt{hasManufacturer}, \`a sa chimie \texttt{Li-ion} via \texttt{hasChemistry}, et \`a chacune de ses sp\'ecifications (tension, capacit\'e, etc.) via \texttt{hasSpecification}. Chaque sp\'ecification porte une valeur num\'erique et une unit\'e.
+
+\subsection{Construction et peuplement du graphe}
+
+Le graphe est construit automatiquement \`a partir des r\'esultats d'extraction JSON. Pour chaque batterie, le syst\`eme cr\'ee les n\oe uds et relations correspondants dans le graphe RDF. Le graphe r\'esultant contient \textbf{431 triplets} (assertions de type sujet-pr\'edicat-objet), repr\'esentant \textbf{4 batteries} et \textbf{57 sp\'ecifications}. Il est s\'erialis\'e au format Turtle (.ttl), un format standard lisible par les outils du Web S\'emantique.
+
+\section{D\'etection d'Hallucinations (Niveau 3)}
+
+Les LLMs peuvent produire des valeurs plausibles mais fausses --- c'est ce qu'on appelle des \textbf{hallucinations}. Un LLM peut par exemple inventer une valeur de capacit\'e qui semble r\'ealiste mais qui n'appara\^it nulle part dans le datasheet, ou attribuer une mauvaise chimie \`a une batterie.
+
+L'objectif de cette partie est de d\'etecter automatiquement ces erreurs \textbf{sans acc\`es \`a la v\'erit\'e terrain}, en utilisant uniquement les connaissances du domaine. Deux approches compl\'ementaires sont mises en \oe uvre.
+
+\subsection{Validation par r\`egles Python}
+
+La premi\`ere approche consiste \`a v\'erifier chaque valeur extraite individuellement, en appliquant des contraintes physiques connues. Par exemple~:
+\begin{itemize}[noitemsep]
+    \item La tension de d\'echarge (cutoff) doit \^etre inf\'erieure \`a la tension nominale, elle-m\^eme inf\'erieure \`a la tension de charge~: autrement, la batterie ne pourrait pas fonctionner.
+    \item Les temp\'eratures de fonctionnement doivent rester dans des bornes physiquement r\'ealistes.
+    \item Le taux d'auto-d\'echarge doit rester entre 0 et 30\%/mois.
+    \item Les valeurs de capacit\'e, r\'esistance et poids doivent \^etre strictement positives.
+\end{itemize}
+
+Chaque anomalie est class\'ee par s\'ev\'erit\'e~: INFO, WARNING, ERROR ou HALLUCINATION.
+
+\subsection{Validation par requ\^etes SPARQL sur le graphe}
+
+La validation Python v\'erifie chaque champ isol\'ement. Mais certaines hallucinations ne sont d\'etectables qu'en \textbf{croisant plusieurs champs entre eux}. C'est l\`a qu'intervient le graphe de connaissances~: en interrogeant les relations s\'emantiques du graphe RDF via SPARQL, on peut d\'etecter des incoh\'erences que l'analyse individuelle ne voit pas.
+
+L'exemple le plus parlant est la \textbf{coh\'erence chimie/tension}. Le LLM a extrait la chimie \og Li-ion \fg{} pour certaines batteries, mais leurs tensions (nominale 3.2\,V, charge 3.65\,V) sont caract\'eristiques du LiFePO4. Individuellement, chaque valeur est valide~: 3.2\,V est une tension acceptable, et \og Li-ion \fg{} est une chimie r\'eelle. Ce n'est qu'en croisant chimie et profil de tension dans le graphe qu'on r\'ev\`ele l'incoh\'erence.
+
+\begin{lstlisting}[language=SQL, caption={D\'etection d'hallucination chimie/tension via SPARQL}]
+SELECT ?model ?chemistry ?nomV ?chargeV WHERE {
+    ?b a batt:Battery ; batt:batteryModel ?model .
+    ?b batt:hasChemistry ?c .
+    ?c batt:chemistryType ?chemistry .
+    ?b batt:hasSpecification ?s1 .
+    ?s1 batt:specName "Nominal Voltage" ;
+        batt:hasValue ?nomV .
+    ?b batt:hasSpecification ?s2 .
+    ?s2 batt:specName "Charge Voltage" ;
+        batt:hasValue ?chargeV .
+    FILTER(?chemistry != "LiFePO4"
+        && xsd:float(?nomV) >= 3.0
+        && xsd:float(?nomV) <= 3.4
+        && xsd:float(?chargeV) >= 3.5
+        && xsd:float(?chargeV) <= 3.75)
+}
+\end{lstlisting}
+
+D'autres r\`egles SPARQL v\'erifient l'ordre des tensions, la coh\'erence \'energ\'etique, l'ordre des temp\'eratures et des courants.
+
+\subsection{R\'esultats de validation}
+
+\begin{table}[H]
+\centering
+\caption{Comparaison des deux m\'ethodes de validation}
+\label{tab:validation}
+\begin{tabular}{lcc}
+\toprule
+\textbf{M\'ethode} & \textbf{Issues d\'etect\'ees} & \textbf{Type} \\
+\midrule
+Validation Python (champ par champ) & 0 & --- \\
+Validation SPARQL (graphe de connaissances) & 2 & HALLUCINATION \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Ce r\'esultat illustre l'apport concret du graphe~: la validation Python ne d\'etecte aucune anomalie car chaque valeur est individuellement valide. La validation SPARQL d\'etecte les \textbf{2 hallucinations de chimie} en croisant la chimie d\'eclar\'ee avec le profil de tension.
+
+\section{Discussion}
+
+\subsection{Apport du graphe de connaissances}
+
+Le r\'esultat principal de ce projet est la d\'emonstration que combiner un LLM avec un graphe de connaissances am\'eliore la fiabilit\'e de l'extraction. Le LLM seul atteint au mieux un F1 de 97.8\% (zero-shot), mais les erreurs de chimie restantes ne sont d\'etectables que par la validation graph-based.
+
+\subsection{Limites et perspectives}
+
+\begin{itemize}
+    \item \textbf{Parsing tabulaire}~: Le parsing textuel peut perdre la structure des tableaux. Un outil sp\'ecialis\'e am\'eliorerait l'extraction.
+    \item \textbf{\'Echelle}~: Le jeu de donn\'ees (4 batteries) est limit\'e. Un corpus plus large permettrait de mieux \'evaluer la robustesse.
+    \item \textbf{SHACL}~: L'ontologie pourrait \^etre enrichie avec des contraintes SHACL pour une validation encore plus formelle.
+\end{itemize}
+
+\section{R\'epartition des T\^aches}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lp{9cm}}
+\toprule
+\textbf{Membre} & \textbf{Contributions} \\
+\midrule
+Membre 1 & Parsing PDF, extraction LLM, prompts zero-shot/few-shot, sch\'ema Pydantic \\
+Membre 2 & Ontologie OWL, construction du graphe RDF, requ\^etes SPARQL \\
+Membre 3 & Validation (r\`egles Python + SPARQL), \'evaluation, ground truth, rapport \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+
+Ce projet d\'emontre qu'un pipeline combinant LLMs et graphe de connaissances constitue une approche efficace pour l'extraction et la validation de donn\'ees techniques industrielles. Le syst\`eme atteint un F1 de 97.8\% en zero-shot et 92.6\% en few-shot, et surtout, la validation graph-based via SPARQL permet de d\'etecter des hallucinations invisibles aux m\'ethodes classiques.
+
+\end{document}

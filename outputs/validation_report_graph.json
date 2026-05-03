@@ -1,0 +1,16 @@
+[
+  {
+    "field": "chemistry",
+    "value": "Li-ion",
+    "rule": "sparql_chemistry_voltage_mismatch",
+    "severity": "HALLUCINATION",
+    "message": "[SPARQL] 16340: chemistry 'Li-ion' is inconsistent with voltage profile (nominal=3.2V, charge=3.65V) \u2014 this profile is characteristic of LiFePO4"
+  },
+  {
+    "field": "chemistry",
+    "value": "Li-ion",
+    "rule": "sparql_chemistry_voltage_mismatch",
+    "severity": "HALLUCINATION",
+    "message": "[SPARQL] FFH3DS: chemistry 'Li-ion' is inconsistent with voltage profile (nominal=3.2V, charge=3.65V) \u2014 this profile is characteristic of LiFePO4"
+  }
+]
