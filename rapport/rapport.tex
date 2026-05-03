@@ -37,7 +37,7 @@
 
 \title{\textbf{LLM-Based Battery Datasheet\\Information Extraction and Validation}\\[1em]
 \large Rapport de Projet --- Donn\'ees Complexes}
-\author{Groupe}
+\author{Mouchonnet Rapha\"el, Lenny Borry, Rayane Tayache}
 \date{Mai 2026}
 
 \begin{document}
@@ -80,7 +80,7 @@ Le syst\`eme est organis\'e en un pipeline s\'equentiel. Le texte brut est d'abo
 \centering
 \begin{tikzpicture}[
     node distance=1.0cm and 1.5cm,
-    block/.style={rectangle, draw, fill=blue!10, text width=3.8cm, text centered, rounded corners, minimum height=0.9cm, font=\small},
+    block/.style={rectangle, draw, fill=blue!10, text width=4.2cm, text centered, rounded corners, minimum height=0.9cm, font=\small},
     arrow/.style={-{Stealth[length=2.5mm]}, thick}
 ]
 \node[block] (pdf) {1. Parsing PDF};
@@ -330,21 +330,6 @@ Le r\'esultat principal de ce projet est la d\'emonstration que combiner un LLM 
     \item \textbf{\'Echelle}~: Le jeu de donn\'ees (4 batteries) est limit\'e. Un corpus plus large permettrait de mieux \'evaluer la robustesse.
     \item \textbf{SHACL}~: L'ontologie pourrait \^etre enrichie avec des contraintes SHACL pour une validation encore plus formelle.
 \end{itemize}
-
-\section{R\'epartition des T\^aches}
-
-\begin{table}[H]
-\centering
-\begin{tabular}{lp{9cm}}
-\toprule
-\textbf{Membre} & \textbf{Contributions} \\
-\midrule
-Membre 1 & Parsing PDF, extraction LLM, prompts zero-shot/few-shot, sch\'ema Pydantic \\
-Membre 2 & Ontologie OWL, construction du graphe RDF, requ\^etes SPARQL \\
-Membre 3 & Validation (r\`egles Python + SPARQL), \'evaluation, ground truth, rapport \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \section{Conclusion}
 
