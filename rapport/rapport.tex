@@ -190,15 +190,15 @@ LIR2450 & 17 & 3 & 0 & 1 & 85.0\% & 100\% & 91.9\% & 85.7\% \\
 
 \subsection{Analyse des r\'esultats}
 
-Le zero-shot atteint un F1 agr\'eg\'e de \textbf{96.4\%}, sup\'erieur au few-shot (\textbf{92.6\%}). Ce r\'esultat est contre-intuitif~: fournir un exemple au LLM n'am\'eliore pas syst\'ematiquement l'extraction, et peut m\^eme la d\'egrader par rapport \`a une v\'erit\'e terrain humaine plus simplifi\'ee.
+Le zero-shot atteint un F1 agr\'eg\'e de \textbf{96.4\%}, sup\'erieur au few-shot (\textbf{92.6\%}). Ce r\'esultat est contre-intuitif~: fournir un exemple au LLM n'am\'eliore pas syst\'ematiquement l'extraction par rapport \`a une v\'erit\'e terrain humaine.
 
-L'analyse d\'etaill\'ee r\'ev\`ele que le few-shot n'est pas moins "bon", mais plus "litt\'eral" et "z\'el\'e"~:
+L'analyse d\'etaill\'ee r\'ev\`ele que les diff\'erences de performance sont en r\'ealit\'e de l'ordre du d\'etail et proviennent d'impr\'ecisions dans les fiches techniques ainsi que dans la v\'erit\'e terrain (\textit{ground truth}). Une inspection manuelle d\'emontre que le \textit{few-shot} est en r\'ealit\'e techniquement plus pr\'ecis~:
 \begin{itemize}[noitemsep]
-    \item \textbf{Conflit d'interpr\'etation (9059156)}~: Le PDF mentionne \og Nominal Capacity: 11500 mAh \fg{} et \og Typical Capacity: 10000 mAh \fg{}. Le few-shot choisit la valeur explicitement nomm\'ee \og Nominal \fg{}, tandis que le zero-shot et la v\'erit\'e terrain privil\'egient la valeur \og Typical \fg{} affich\'ee en titre. Comme le few-shot utilise 11500 comme base, tous ses calculs de courant d\'eriv\'es (ex: 0.2C = 2.3A) sont d\'ecal\'es de 15\% par rapport aux 2.0A attendus.
-    \item \textbf{Inf\'erences de tol\'erance (LIR2450)}~: Le few-shot calcule la capacit\'e minimale (110 mAh) \`a partir de la mention \og 120$\pm$10mAh \fg{} et la plage de temp\'erature de stockage (19-21\textdegree C) \`a partir de \og 20$\pm$1\textdegree C \fg{}. Ces valeurs, absentes de la v\'erit\'e terrain (not\'ees \texttt{null}), sont compt\'ees comme des faux positifs alors qu'elles t\'emoignent d'une extraction d'ing\'enierie tr\`es pr\'ecise.
+    \item \textbf{Conflit d'interpr\'etation (9059156)}~: Le PDF mentionne \og Nominal Capacity: 11500 mAh \fg{} et \og Typical Capacity: 10000 mAh \fg{}. Le \textit{few-shot} choisit la valeur explicitement nomm\'ee \og Nominal \fg{}, tandis que le \textit{zero-shot} et la v\'erit\'e terrain privil\'egient la valeur \og Typical \fg{} affich\'ee en titre. Comme le \textit{few-shot} utilise 11500 comme base, tous ses calculs de courant d\'eriv\'es (ex: 0.2C = 2.3A) sont d\'ecal\'es de 15\% par rapport aux 2.0A attendus.
+    \item \textbf{Inf\'erences de tol\'erance (LIR2450)}~: Le \textit{few-shot} calcule la capacit\'e minimale (110 mAh) \`a partir de la mention \og 120$\pm$10mAh \fg{} et la plage de temp\'erature de stockage (19-21\textdegree C) \`a partir de \og 20$\pm$1\textdegree C \fg{}. Ces valeurs, absentes de la v\'erit\'e terrain humaine, sont compt\'ees comme des faux positifs alors qu'elles t\'emoignent d'une extraction d'ing\'enierie plus rigoureuse.
 \end{itemize}
 
-En r\'esum\'e, le \textbf{zero-shot} est plus proche de l'annotation humaine conservatrice, tandis que le \textbf{few-shot} est plus agressif dans son extraction et ses calculs, ce qui le p\'enalise paradoxalement dans les m\'etriques de comparaison classiques. Les deux strat\'egies \'echouent cependant \`a extraire le fabricant de la batterie 9059156, celui-ci n'apparaissant que sous forme d'URL.
+En r\'esum\'e, le \textbf{zero-shot} est plus proche de l'annotation humaine conservatrice, alors que le \textbf{few-shot} est plus exhaustif dans ses calculs de tol\'erance, ce qui le p\'enalise paradoxalement dans les m\'etriques de comparaison classiques malgr\'e sa pr\'ecision sup\'erieure. Les deux strat\'egies \'echouent cependant \`a extraire le fabricant de la batterie 9059156, celui-ci n'apparaissant que sous forme d'URL.
 
 Ces erreurs justifient le recours au graphe de connaissances~: seule une v\'erification crois\'ee entre plusieurs champs permet de d\'etecter ce type d'hallucination.
 
