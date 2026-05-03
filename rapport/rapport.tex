@@ -220,15 +220,15 @@ L'ontologie d\'efinit le vocabulaire et la structure du graphe. Elle d\'ecrit qu
     inhprop/.style={-{Stealth}, thick, dashed, font=\scriptsize},
 ]
 \node[class] (bat) {Battery};
-\node[class, right=3.5cm of bat] (spec) {Specification};
-\node[class, below left=1.6cm and 0.0cm of bat] (mfr) {Manufacturer};
-\node[class, below right=1.6cm and 0.0cm of bat] (chem) {Chemistry};
-\node[class, right=of spec] (unit) {Unit};
+\node[class, right=5.5cm of bat] (spec) {Specification};
+\node[class, below left=1.8cm and 1.2cm of bat] (mfr) {Manufacturer};
+\node[class, below=1.8cm of bat] (chem) {Chemistry};
+\node[class, right=1.5cm of spec] (unit) {Unit};
 
-\node[subclass, below left=1.3cm and -0.5cm of spec] (elec) {ElectricalSpec};
-\node[subclass, below right=1.3cm and -0.5cm of spec] (therm) {ThermalSpec};
-\node[subclass, below=0.5cm of elec] (phys) {PhysicalSpec};
-\node[subclass, below=0.5cm of therm] (life) {LifecycleSpec};
+\node[subclass, below left=1.5cm and 1.0cm of spec] (elec) {ElectricalSpec};
+\node[subclass, below right=1.5cm and 1.0cm of spec] (therm) {ThermalSpec};
+\node[subclass, below=0.7cm of elec] (phys) {PhysicalSpec};
+\node[subclass, below=0.7cm of therm] (life) {LifecycleSpec};
 
 \draw[prop] (bat) -- node[above] {hasSpec} (spec);
 \draw[prop] (bat) -- node[left] {hasMfr} (mfr);
